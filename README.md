@@ -9,7 +9,7 @@ Este documento explica paso a paso cómo diseñar, implementar y probar una esta
 - [x] 4. Elemento(s) de visualización
 - [x] 5. Prototipo funcional (código + pruebas)
 - [ ] 6. Informe en formato IEEE
-- [ ] 7. Repositorio en GitLab con trazabilidad
+- [x] 7. Repositorio en GitLab con trazabilidad
 
 En las secciones siguientes se desarrollan cada uno de los puntos solicitados y se incluyen artefactos (firmware, instrucciones y plantilla de informe).
 ## 1. Metodología y modelo matemático
