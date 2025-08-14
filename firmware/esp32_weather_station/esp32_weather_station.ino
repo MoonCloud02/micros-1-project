@@ -42,25 +42,28 @@ WebServer server(80);
 
 unsigned long lastSample = 0;
 
-// buffers para SMA
+/* buffers para SMA, son necesarios para calcular la media móvil
+ estos buffers almacenan las últimas lecturas para calcular la media*/
 float tempBuf[SMA_SIZE];
 float humBuf[SMA_SIZE];
 float presBuf[SMA_SIZE];
 int bufIndex = 0;
 int bufCount = 0;
 
+// Variables para almacenar la media móvil
 float smaTemp = 0, smaHum = 0, smaPres = 0;
 
 String htmlPage = ""; // contenido de la página web (servido dinámicamente)
 
 // ---------- FUNCIONES AUXILIARES ----------
+// Esta función calcula la media móvil simple (SMA) con la expresión matemática 
 float computeSMA(float *buf, int count) {
   float s = 0.0;
   for (int i = 0; i < count; ++i) s += buf[i];
   return s / (float)count;
 }
 
-// Punto de rocío (Magnus)
+// Punto de rocío (Magnus) calculada con la expresión matemática 
 float dewPoint(float T, float RH) {
   // T en °C, RH en %
   const float a = 17.27;
@@ -70,13 +73,14 @@ float dewPoint(float T, float RH) {
   return Td;
 }
 
-// Presión al nivel del mar (approx)
+// Presión al nivel del mar (approx) calculada con la expresión matemática
 float pressureSeaLevel(float P, float altitude) {
   // P en hPa, altitude en metros
   return P / pow(1 - (altitude / 44330.0), 5.255);
 }
 
-// Construye página HTML simple con fetch para /data
+// Construye página HTML simple con fetch para /data (data siendo el JSON como bate de datos)
+//buildHTML sirve para generar el contenido HTML de la página web
 String buildHTML() {
   String s = R"rawliteral(
 <!DOCTYPE html>
@@ -115,7 +119,7 @@ async function update() {
     document.getElementById('time').textContent = new Date(j.timestamp * 1000).toLocaleString();
     document.getElementById('ip').textContent = window.location.host;
   } catch (e) {
-    console.log('update error', e);
+    console.log('update error: ', e);
   }
 }
 setInterval(update, 2000);
@@ -127,7 +131,7 @@ update();
   return s;
 }
 
-// Endpoint /data
+// Endpoint /data (Base de datos)
 void handleData() {
   // Prepara JSON
   String payload = "{";
@@ -194,7 +198,7 @@ void loop() {
     // DHT read may fail -> check
     if (isnan(T) || isnan(H)) {
       Serial.println("Warning: lectura DHT11 fallida, manteniendo valores previos si existen.");
-      // keep previous sma values (buffers unchanged)
+      // mantiene valores SMA previos (buffers sin cambios)
     }
 
     // BMP180 presión (devuelve Pa en la librería de Adafruit), convertir a hPa
