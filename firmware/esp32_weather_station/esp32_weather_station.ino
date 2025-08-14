@@ -4,9 +4,6 @@
   Requisitos de librería (Arduino IDE Library Manager):
    - Adafruit BMP180 Library
    - Adafruit Unified Sensor
-   - DHT Sensor Library
-
-   Revisa el archivo `referencias.md` para obtener las librerias que te falten
 
   Conexiones (I2C): SDA -> GPIO21, SCL -> GPIO22
 */
@@ -19,7 +16,7 @@
 #include "DHT.h"
 
 // --------- CONFIGURACIÓN ----------
-const char* SSID = "a";          // <- PON TU SSID
+const char* SSID = "alv";          // <- PON TU SSID
 const char* PASSWORD = "mmgvo2002";  // <- PON TU PASSWORD
 
 // Altitud del sensor en metros (para corrección a nivel del mar)
@@ -168,22 +165,14 @@ void setup() {
   // Inicializar buffers
   for (int i = 0; i < SMA_SIZE; ++i) { tempBuf[i] = 0; humBuf[i] = 0; presBuf[i] = 0; }
 
-  // Conectar WiFi
-  WiFi.begin(SSID, PASSWORD);
-  Serial.print("Conectando a WiFi");
-  int tries = 0;
-  while (WiFi.status() != WL_CONNECTED && tries < 30) {
-    delay(500);
-    Serial.print('.');
-    tries++;
-  }
-  Serial.println();
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.print("Conectado. IP: ");
-    Serial.println(WiFi.localIP());
-  } else {
-    Serial.println("No se pudo conectar a la red WiFi. Revisa SSID/Password.");
-  }
+  // Iniciar punto de acceso (AP) para acceso local
+  const char* AP_SSID = "ESP32_WeatherStation";
+  Serial.print("Iniciando punto de acceso (AP): "); Serial.println(AP_SSID);
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(AP_SSID);
+  IPAddress apIP = WiFi.softAPIP();
+  Serial.print("AP iniciado. SSID: "); Serial.print(AP_SSID);
+  Serial.print("  IP: "); Serial.println(apIP);
 
   // Web server
   htmlPage = buildHTML();
