@@ -36,3 +36,9 @@ Este archivo agrupa las referencias y recursos utilizados para el proyecto (medi
 	https://github.com/adafruit/Adafruit-BMP085-Library
 - Adafruit DHT sensor library (GitHub):
 	https://github.com/adafruit/DHT-sensor-library
+- Documentación de Wire (I2C) en Arduino:
+	https://docs.arduino.cc/learn/communication/wire/
+- Librería WiFi de Arduino (GitHub):
+	https://github.com/arduino-libraries/WiFi
+- `WebServer.h` en el core de ESP32 (implementación usada en el sketch):
+	https://github.com/espressif/arduino-esp32/blob/master/libraries/WebServer/src/WebServer.h
