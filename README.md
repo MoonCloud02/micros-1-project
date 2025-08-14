@@ -1,93 +1,157 @@
-# micros-1-project
+# Estación Meteorológica — Proyecto (ESP32)
 
+Este documento explica paso a paso cómo diseñar, implementar y probar una estación meteorológica con ESP32 que mide presión atmosférica, temperatura y humedad, y muestra un dashboard web alojado en el propio ESP32.
+## Checklist de requisitos
 
+- [ ] 1. Metodología y modelo matemático
+- [ ] 2. Consideraciones de diseño (hardware y MCU)
+- [ ] 3. Diagrama de flujo del software
+- [ ] 4. Elemento(s) de visualización
+- [ ] 5. Prototipo funcional (código + pruebas)
+- [ ] 6. Informe en formato IEEE
+- [ ] 7. Repositorio en GitLab con trazabilidad
 
-## Getting started
+En las secciones siguientes se desarrollan cada uno de los puntos solicitados y se incluyen artefactos (firmware, instrucciones y plantilla de informe).
+## 1. Metodología y modelo matemático
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Objetivo: medir temperatura (T), humedad relativa (RH) y presión atmosférica (P) y ofrecer:
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- Lecturas en tiempo real (dashboard web)
+- Valores procesados: presión corregida al nivel del mar y punto de rocío
 
-## Add your files
+Metodología (resumen):
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+1. Tomar muestras periódicas del sensor (intervalo configurable, p.ej., 2–10 s).
+2. Aplicar un filtro de medias móviles para reducir ruido.
+3. Calcular variables derivadas (punto de rocío, presión al nivel del mar) usando fórmulas estándar.
+4. Entregar lecturas crudas y procesadas por el servidor web integrado.
+Modelo matemático y fórmulas:
 
-```
-cd existing_repo
-git remote add origin https://gitlab.com/miguel.luna3-group/micros-1-project.git
-git branch -M main
-git push -uf origin main
-```
+- Media móvil simple (SMA) sobre N muestras: SMA = (1/N) * sum_{i=0}^{N-1} x[i]
+- Punto de rocío (Magnus-Tetens aproximado):
 
-## Integrate with your tools
+	a = 17.27
+	b = 237.7  (°C)
+	gamma = (a * T) / (b + T) + ln(RH/100)
+	Td = (b * gamma) / (a - gamma)
 
-- [ ] [Set up project integrations](https://gitlab.com/miguel.luna3-group/micros-1-project/-/settings/integrations)
+	donde T está en °C y RH en % (0-100). El resultado Td está en °C.
+- Presión al nivel del mar (fórmula barométrica aproximada):
 
-## Collaborate with your team
+	P0 = P / pow(1 - (altitude / 44330.0), 5.255)
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+	donde P es la presión medida en hPa, altitude es la altura del sensor en metros (m) y P0 es la presión corregida al nivel del mar en hPa.
 
-## Test and Deploy
+Observaciones: para alta precisión conviene calibrar con estaciones locales y considerar la temperatura media de la columna de aire; de todas formas la fórmula anterior es suficiente para trabajos académicos.
+## 2. Consideraciones de diseño
 
-Use the built-in continuous integration in GitLab.
+Requisitos funcionales:
+- Medir T, RH, P.
+- Comunicación WiFi (ESP32) para servir dashboard.
+- Interfaz web sencilla con actualizaciones periódicas (AJAX: JavaScript asíncrono y XML).
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+Hardware externo sugerido (opciones económicas, sin depender de Adafruit):
 
-***
+- Sensores: BMP180/BMP085 (presión) + DHT11 o DHT22 (humedad y temperatura). BMP180 es económico y fácil de usar por I2C; DHT11 es la opción más barata para T/RH (DHT22 mejora precisión si está disponible).
+- Microcontrolador: ESP32 (p.ej., WROOM32 o nodemcu-32s).
+- Cables y protoboard o placa perf. O placa base personalizada.
 
-# Editing this README
+Conexiones (BMP180 por I2C, DHT por pin digital):
+- BMP180 VCC -> 3.3V
+- BMP180 GND -> GND
+- BMP180 SDA -> ESP32 SDA pin (por defecto GPIO21)
+- BMP180 SCL -> ESP32 SCL pin (por defecto GPIO22)
+- DHT DATA -> pin digital configurable (ej. GPIO4) ; VCC -> 3.3V, GND -> GND
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+Consideraciones internas del MCU:
 
-## Suggestions for a good README
+- Pines: reservar GPIO21(SDA) y GPIO22(SCL) para I2C; usar pines libres para LEDs u otros actuadores.
+- Memoria: página web pequeña embebida en el sketch; suficiente en ESP32.
+- Consumo: para uso con batería, implementar modos de ahorro (deep sleep) y wake periódicamente; en este proyecto asumimos alimentación permanente.
+- Seguridad: proteger SSID/contraseña y añadir opción para cambiar credenciales en el futuro (por ejemplo captive portal o endpoint seguro), no séra usado en este proyecto dada la simplicidad que el mismo requiere.
+Librerías recomendadas (Arduino IDE Library Manager):
+- "Adafruit BMP085 Unified" (compatible con BMP180/BMP085) o librería equivalente para BMP180.
+- "DHT sensor library" (p. ej. la de Adafruit) para DHT11/DHT22.
+Alternativa: usar librerías de SparkFun o implementaciones ligeras si se quiere evitar Adafruit.
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+## 3. Diagrama de flujo (secuencial)
 
-## Name
-Choose a self-explaining name for your project.
+Resumen en texto (pseudodiagrama):
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+1. Inicio
+2. Inicializar Serial, I2C, sensor BMP180
+3. Conectar a WiFi
+	- Si falla, seguir reintentando y reportar por Serial
+4. Iniciar servidor web y/o endpoints.
+5. Bucle principal:
+	a. Leer sensor (T, RH, P)
+	b. Aplicar filtro (SMA)
+	c. Calcular punto de rocío y presión al nivel del mar (con altura configurada)
+	d. Actualizar estructura de datos compartida
+	e. Imprimir por Serial/Mandar datos a la web
+	f. Esperar intervalo de muestreo
+6. Responder peticiones HTTP: página estática y endpoint JSON con datos actuales
+7. Fin (solo en apagado)
+Diagrama de flujo sencillo (ASCII):
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+Start
+	|
+	v
+Init peripherals (Serial, I2C, Sensor)
+	|
+Connect WiFi -> If fail retry
+	|
+Start WebServer
+	|
+Loop:
+	|- Read sensor -> Filter -> Compute derived -> Update shared data -> Serial print
+	|- Handle HTTP requests
+	v
+ Repeat
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## 4. Visualización de datos
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+Se proveen dos elementos de visualización:
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+- Terminal Serial (IDE Arduino): para debug y salida periódica de lecturas.
+- Dashboard web alojado en el ESP32: página HTML+JS que consulta /data cada 2 s y actualiza valores en pantalla.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+La página muestra: temperatura (°C), humedad (%), presión (hPa), presión nivel mar (hPa), punto de rocío (°C) y timestamp.
+## 5. Prototipo funcional (firmware)
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Archivos incluidos en este repositorio:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+- `firmware/esp32_weather_station.ino` — Sketch para Arduino IDE (ESP32). Incluye servidor web y lectura de BMP180.
+- `firmware/README.md` — Instrucciones rápidas para subir el sketch y librerías requeridas.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+Pasos para probar:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+1. Conecta el BMP180 al ESP32 por I2C (SDA=21, SCL=22 por defecto).
+2. Instala las librerías indicadas en el `firmware/README.md`.
+3. Abre y edita el archivo `.ino` para poner tu SSID y contraseña.
+4. Sube el sketch desde Arduino IDE (board: ESP32 Dev Module).
+5. Abre la IP mostrada por Serial en tu navegador para ver el dashboard.
+## 6. Informe en formato IEEE
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+En `report/` se incluye un archivo `IEEE_report.md` con la estructura básica (plantilla) para pasar al informe final en el archivo `IEEE_report.doc`. Debe contener: Resumen, Introducción, Metodología, Diseño de hardware, Diseño de software, Resultados, Discusión, Conclusiones y Referencias.
 
-## License
-For open source projects, say how it is licensed.
+## 7. Repositorio en GitLab
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Para la calificación se creó este proyecto en GitLab y se importó este repositorio. Recomendaciones que se tomaron:
+
+- Mantener branches: `main` para entrega, `dev` para desarrollo
+- Usar commits descriptivos y Merge Requests
+- Incluir issues y milestones para trazabilidad
+
+---
+
+Pasos a tomar:
+
+1. Añadir el sketch `firmware/esp32_weather_station.ino` al ESP32.
+2. Leer `firmware/README.md` con instrucciones.
+3. Modificar `report/IEEE_report.doc` para hacer el reporte final.
+
+---
+
+Revisa la carpeta `firmware` creada en el repositorio para el código y procedimientos.
+Proyecto: Estación Meteorológica (presión, temperatura y humedad)
