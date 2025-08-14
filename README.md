@@ -6,8 +6,8 @@ Este documento explica paso a paso cómo diseñar, implementar y probar una esta
 - [x] 1. Metodología y modelo matemático
 - [x] 2. Consideraciones de diseño (hardware y MCU)
 - [ ] 3. Diagrama de flujo del software
-- [ ] 4. Elemento(s) de visualización
-- [ ] 5. Prototipo funcional (código + pruebas)
+- [x] 4. Elemento(s) de visualización
+- [x] 5. Prototipo funcional (código + pruebas)
 - [ ] 6. Informe en formato IEEE
 - [ ] 7. Repositorio en GitLab con trazabilidad
 
