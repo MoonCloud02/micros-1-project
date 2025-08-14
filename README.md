@@ -135,6 +135,8 @@ Pasos para probar:
 
 En `report/` se incluye un archivo `IEEE_report.md` con la estructura básica (plantilla) para pasar al informe final en el archivo `IEEE_report.doc`. Debe contener: Resumen, Introducción, Metodología, Diseño de hardware, Diseño de software, Resultados, Discusión, Conclusiones y Referencias.
 
+Las referencias se pueden encontrar en el archivo `report/referencias.md`
+
 ## 7. Repositorio en GitLab
 
 Para la calificación se creó este proyecto en GitLab y se importó este repositorio. Recomendaciones que se tomaron:

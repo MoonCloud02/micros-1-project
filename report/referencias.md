@@ -1,0 +1,1 @@
+Altímetro: Ubicación o altitud actual: https://coordinates-converter.com/es/altimetro
