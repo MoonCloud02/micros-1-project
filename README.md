@@ -3,8 +3,8 @@
 Este documento explica paso a paso cómo diseñar, implementar y probar una estación meteorológica con ESP32 que mide presión atmosférica, temperatura y humedad, y muestra un dashboard web alojado en el propio ESP32.
 ## Checklist de requisitos
 
-- [ ] 1. Metodología y modelo matemático
-- [ ] 2. Consideraciones de diseño (hardware y MCU)
+- [x] 1. Metodología y modelo matemático
+- [x] 2. Consideraciones de diseño (hardware y MCU)
 - [ ] 3. Diagrama de flujo del software
 - [ ] 4. Elemento(s) de visualización
 - [ ] 5. Prototipo funcional (código + pruebas)
