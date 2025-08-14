@@ -121,7 +121,7 @@ La página muestra: temperatura (°C), humedad (%), presión (hPa), presión niv
 
 Archivos incluidos en este repositorio:
 
-- `firmware/esp32_weather_station.ino` — Sketch para Arduino IDE (ESP32). Incluye servidor web y lectura de BMP180.
+- `firmware/esp32_weather_station/esp32_weather_station.ino` — Sketch para Arduino IDE (ESP32). Incluye servidor web y lectura de BMP180.
 - `firmware/README.md` — Instrucciones rápidas para subir el sketch y librerías requeridas.
 
 Pasos para probar:
@@ -149,7 +149,7 @@ Para la calificación se creó este proyecto en GitLab y se importó este reposi
 
 Pasos a tomar:
 
-1. Añadir el sketch `firmware/esp32_weather_station.ino` al ESP32.
+1. Añadir el sketch `firmware/esp32_weather_station/esp32_weather_station.ino` al ESP32.
 2. Leer `firmware/README.md` con instrucciones.
 3. Modificar `report/IEEE_report.doc` para hacer el reporte final.
 
