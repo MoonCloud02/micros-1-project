@@ -24,7 +24,7 @@ Metodología (resumen):
 1. Tomar muestras periódicas del sensor (intervalo configurable, p.ej., 2–10 s).
 2. Aplicar un filtro de medias móviles para reducir ruido.
 3. Calcular variables derivadas (punto de rocío, presión al nivel del mar) usando fórmulas estándar.
-4. Entregar lecturas crudas y procesadas por el servidor web integrado.
+4. Entregar lecturas crudas y procesadas por el servidor web integrado (el ESP32 puede funcionar en modo Access Point y servir el dashboard localmente).
 Modelo matemático y fórmulas:
 
 - Media móvil simple (SMA) sobre N muestras: SMA = (1/N) * sum_{i=0}^{N-1} x[i]
@@ -80,8 +80,8 @@ Resumen en texto (pseudodiagrama):
 
 1. Inicio
 2. Inicializar Serial, I2C, sensor BMP180
-3. Conectar a WiFi
-	- Si falla, seguir reintentando y reportar por Serial
+3. Iniciar punto de acceso (AP) local para servir el dashboard
+	- En la versión actual el dispositivo crea un AP local; no requiere conexión a una red externa
 4. Iniciar servidor web y/o endpoints.
 5. Bucle principal:
 	a. Leer sensor (T, RH, P)
