@@ -23,6 +23,6 @@ Instrucciones de uso:
 7. Conéctate desde tu PC o móvil a la red WiFi `ESP32_WeatherStation` (o el `AP_SSID` que hayas configurado) y abre `http://192.168.4.1/` para ver el dashboard.
 
 Notas:
-- El sketch ahora usa BMP180/BMP085 para presión y DHT11 para temperatura y humedad.
-- DHT11 es menos preciso y más lento que DHT22; si dispones de DHT22 considéralo como mejora.
-- Si tu BMP utiliza otra dirección I2C, revisa las conexiones y la biblioteca.
+- El sketch usa BMP180/BMP085 para presión y DHT11 para temperatura y humedad.
+- DHT11 es menos preciso y más lento que DHT22; si se dispone de DHT22 es una mejora.
+- Si el BMP utiliza otra dirección I2C, revisar las conexiones y la biblioteca.
