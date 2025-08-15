@@ -42,3 +42,8 @@ Este archivo agrupa las referencias y recursos utilizados para el proyecto (medi
 	https://github.com/arduino-libraries/WiFi
 - `WebServer.h` en el core de ESP32 (implementación usada en el sketch):
 	https://github.com/espressif/arduino-esp32/blob/master/libraries/WebServer/src/WebServer.h
+
+## Herramientas de diagramación
+
+- Mermaid (diagramas en Markdown, útil para documentar flujo y diagramas de estado):
+	https://mermaid.js.org
