@@ -61,7 +61,7 @@ A continuación se describe, en orden cronológico y práctico, el procedimiento
 
 9) Exposición de datos y servidor web
 
-- Construir una página HTML embebida (`buildHTML()`) y publicar un endpoint JSON `/data` que devuelve las variables filtradas: `temperature`, `humidity`, `pressure`, `pressure_sea`, `dew_point`, `timestamp`.
+- Construir una página HTML embebida (`buildHTML()`) y publicar un endpoint JSON `/data` que devuelve las variables filtradas: `temperature`, `humidity`, `pressure`, `pressure_sea`, `dew_point`, `uptime`.
 - Ejecutar el ESP32 en modo Access Point (`WiFi.mode(WIFI_AP)` + `WiFi.softAP(AP_SSID)`) con `AP_SSID = "ESP32_WeatherStation"` para facilitar pruebas sin infraestructura de red.
 - Llamar `server.handleClient()` en el `loop()` para atender peticiones HTTP.
 
