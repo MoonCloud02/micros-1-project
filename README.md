@@ -1,6 +1,8 @@
 # Estación Meteorológica — Proyecto (ESP32)
 
 Este documento explica paso a paso cómo diseñar, implementar y probar una estación meteorológica con ESP32 que mide presión atmosférica, temperatura y humedad, y muestra un dashboard web alojado en el propio ESP32.
+
+![Circuito montado ESP32 con DHT11 y BMP180](report/mountedcircuit.jpeg)
 ## Checklist de requisitos
 
 - [x] 1. Metodología y modelo matemático
