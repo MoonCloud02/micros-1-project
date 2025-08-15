@@ -21,7 +21,7 @@ A continuación se describe, en orden cronológico y práctico, el procedimiento
 
 1) Selección de sensores y decisiones iniciales
 
-- Elegimos BMP180/BMP085 para presión (I2C) y DHT11 para temperatura/humedad por su bajo coste y disponibilidad. Se decidió priorizar reproducibilidad y simplicidad sobre alta precisión.
+- Se eligió BMP180/BMP085 para presión (I2C) y DHT11 para temperatura/humedad por su bajo coste y disponibilidad. Se decidió priorizar reproducibilidad y simplicidad sobre alta precisión.
 
 2) Cableado y montaje básico
 
@@ -40,9 +40,9 @@ A continuación se describe, en orden cronológico y práctico, el procedimiento
 
 5) Diseñar muestreo y buffering
 
-- Decidimos un muestreo no bloqueante con `millis()` y `SAMPLE_INTERVAL = 2000` ms, compatible con la tasa de refresco del DHT11.
-- Implementamos buffers circulares por variable (`tempBuf`, `humBuf`, `presBuf`) y variables `bufIndex` y `bufCount` para manejar la ventana móvil.
-- Definimos `SMA_SIZE = 6` como ventana por defecto y añadimos lógica para incrementar `bufCount` durante el arranque hasta alcanzar la ventana completa.
+- Se decidió un muestreo no bloqueante con `millis()` y `SAMPLE_INTERVAL = 2000` ms, compatible con la tasa de refresco del DHT11.
+- Se implementó buffers circulares por variable (`tempBuf`, `humBuf`, `presBuf`) y variables `bufIndex` y `bufCount` para manejar la ventana móvil.
+- Se definió `SMA_SIZE = 6` como ventana por defecto y añadimos lógica para incrementar `bufCount` durante el arranque hasta alcanzar la ventana completa.
 
 6) Lectura y saneamiento de datos
 
@@ -136,7 +136,7 @@ El flujo secuencial es:
    - Calcular punto de rocío y presión a nivel del mar.
    - Enviar datos por Serial y atender clientes HTTP.
 
-![Diagrama de flujo del sketch](report/diagram.png)
+![Diagrama de flujo del sketch](diagram.png)
 
 ## 6. Protocolo de pruebas y resultados esperados
 
@@ -152,6 +152,9 @@ Métricas reportadas:
 - Error medio y RMSE para temperatura y presión frente a referencia están dentro del rango aceptable de precisión.
 - Comportamiento temporal de la SMA (estabilidad vs. latencia) adecuada para la correcta visualización de los datos.
 - Capturas del dashboard y logs Serial.
+
+![Dashboard](dashboard.jpeg)
+![Logs del Serial](LogSerial.png)
 
 ## 7. Discusión
 
