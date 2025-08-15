@@ -16,8 +16,6 @@
 #include "DHT.h"
 
 // --------- CONFIGURACIÓN ----------
-const char* SSID = "alv";          // <- PON TU SSID
-const char* PASSWORD = "mmgvo2002";  // <- PON TU PASSWORD
 
 // Altitud del sensor en metros (para corrección a nivel del mar)
 const float ALTITUDE_METERS = 1458; // ajustar según ubicación
@@ -104,7 +102,7 @@ String buildHTML() {
   <div class="card">Presión: <span class="val" id="pres">-- hPa</span></div>
   <div class="card">Presión (nivel mar): <span class="val" id="pres0">-- hPa</span></div>
   <div class="card">Punto de rocío: <span class="val" id="dew">-- °C</span></div>
-  <div class="card">Última actualización: <span id="time">-</span></div>
+  <div class="card">Tiempo encendido: <span id="uptime">-</span></div>
 
 <script>
 async function update() {
@@ -116,7 +114,25 @@ async function update() {
     document.getElementById('pres').textContent = j.pressure.toFixed(2) + ' hPa';
     document.getElementById('pres0').textContent = j.pressure_sea.toFixed(2) + ' hPa';
     document.getElementById('dew').textContent = j.dew_point.toFixed(2) + ' °C';
-    document.getElementById('time').textContent = new Date(j.timestamp * 1000).toLocaleString();
+    // Mostrar tiempo de encendido en formato legible
+    function formatUptime(s) {
+      s = Math.floor(s);
+      var days = Math.floor(s / 86400);
+      s = s % 86400;
+      var hours = Math.floor(s / 3600);
+      s = s % 3600;
+      var mins = Math.floor(s / 60);
+      var secs = s % 60;
+      var parts = [];
+      if (days > 0) parts.push(days + 'd');
+      parts.push((hours<10? '0'+hours: hours) + ':' + (mins<10? '0'+mins: mins) + ':' + (secs<10? '0'+secs: secs));
+      return parts.join(' ');
+    }
+    if (j.uptime !== undefined) {
+      document.getElementById('uptime').textContent = formatUptime(j.uptime);
+    } else {
+      document.getElementById('uptime').textContent = '-';
+    }
     document.getElementById('ip').textContent = window.location.host;
   } catch (e) {
     console.log('update error: ', e);
@@ -142,7 +158,8 @@ void handleData() {
   payload += "\"pressure_sea\":" + String(psea, 2) + ",";
   float dew = dewPoint(smaTemp, smaHum);
   payload += "\"dew_point\":" + String(dew, 2) + ",";
-  payload += "\"timestamp\":" + String((long)(millis() / 1000));
+  // Enviar uptime en segundos (tiempo desde arranque)
+  payload += "\"uptime\":" + String((long)(millis() / 1000));
   payload += "}";
   server.send(200, "application/json", payload);
 }
