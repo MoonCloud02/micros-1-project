@@ -33,6 +33,27 @@ A continuación se describe, en orden cronológico y práctico, el procedimiento
 - Usar Arduino IDE con soporte de ESP32 instalado.
 - Instalar librerías: `Adafruit BMP085 Unified` (compatible con BMP180) y `DHT sensor library` (o equivalente) desde Library Manager.
 
+### Librerías principales y cómo actúan en el sketch
+
+A continuación se describen las librerías que el firmware utiliza con detalle práctico (qué son, cómo obtienen los datos y su papel en el código):
+
+- `WiFi.h` — librería del core de Arduino/ESP32 para gestionar la radio Wi‑Fi. No recoge datos de sensores; permite poner el ESP32 en modo Access Point o Station, gestionar la conexión y obtener la IP. En este proyecto habilita la comunicación con clientes que consultan el dashboard y el endpoint `/data`.
+
+- `WebServer.h` — servidor HTTP simple incluido en el core ESP32. Expone handlers (por ejemplo `server.on(
+   "/data", handleData)`) que se ejecutan cuando llega una petición; el handler lee las variables internas (SMA, presión, punto de rocío, uptime) y responde con HTML o JSON. Es síncrono y suficiente para demos/local, pero para cargas mayores se recomienda `AsyncWebServer`.
+
+- `Wire.h` — implementación del bus I2C. Gestiona el protocolo físico (start/stop, dirección, lectura de registros) y suministra los bytes al driver del sensor. En el sketch se inicializa con `Wire.begin(I2C_SDA, I2C_SCL)` y permite que la librería del BMP180 lea sus registros de calibración y conversiones ADC.
+
+- `Adafruit_BMP085.h` (compatible con BMP180) — wrapper que implementa la comunicación I2C con el sensor y aplica las fórmulas de compensación/calibración (coeficientes del dispositivo) para devolver temperatura y presión en unidades físicas. Usualmente la librería devuelve presión en Pa, por lo que el sketch convierte a hPa (`/100.0`) y luego aplica la corrección al nivel del mar.
+
+- `DHT.h` — librería para sensores DHT11/DHT22 que implementa el protocolo de un solo hilo basado en timing. Controla un pin digital, genera la señal de inicio y mide la duración de pulsos enviados por el sensor; a partir de esas pulsaciones reconstruye humedad y temperatura. Es sensible al timing y a interrupciones, por lo que conviene respetar los intervalos recomendados entre lecturas.
+
+Notas prácticas:
+- Instalar las librerías desde el Library Manager o clonar los repositorios oficiales (vía referencias). Verificar unidades (p. ej. Pa vs hPa) y la API de la librería (nombres de métodos y valores de retorno).
+- Para desarrollo en VS Code, añade las rutas de las librerías y del core ESP32 al `includePath` del C/C++ extension o usa PlatformIO/Arduino extension para evitar errores de IntelliSense.
+- Manejar fallos: comprobar `bmp.begin()` y si `dht.readTemperature()` devuelve `NaN` no introducir esas lecturas en la SMA (preservar valores anteriores o ignorar la muestra).
+
+
 4) Implementación básica del firmware
 
 - Inicializar Serial (115200 bps) para logs de diagnóstico.
