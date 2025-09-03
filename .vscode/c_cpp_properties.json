@@ -1,17 +1,25 @@
 {
   "configurations": [
     {
-      "name": "windows-gcc-x64",
+      "name": "Win32-ESP32",
       "includePath": [
-        "${workspaceFolder}/**"
+        "${workspaceFolder}/**",
+        "D:/Users/${env:USERNAME}/Documents/Arduino/libraries/**",
+        "C:/Users/${env:USERNAME}/AppData/Local/Arduino15/packages/esp32/hardware/esp32/**/**",
+        "C:/Users/${env:USERNAME}/AppData/Local/Arduino15/packages/esp32/hardware/esp32/**/tools/**"
       ],
-      "compilerPath": "gcc",
-      "cStandard": "${default}",
-      "cppStandard": "${default}",
-      "intelliSenseMode": "windows-gcc-x64",
-      "compilerArgs": [
-        ""
-      ]
+      "browse": {
+        "path": [
+          "${workspaceFolder}/**",
+          "D:/Users/${env:USERNAME}/Documents/Arduino/libraries/**",
+          "C:/Users/${env:USERNAME}/AppData/Local/Arduino15/packages/esp32/hardware/esp32/**/**"
+        ],
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "compilerPath": "C:/Users/${env:USERNAME}/AppData/Local/Arduino15/packages/esp32/tools/xtensa-esp-elf-gdb/14.2_20240403/bin/xtensa-esp32-elf-gdb.exe",
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "gcc-x64"
     }
   ],
   "version": 4
