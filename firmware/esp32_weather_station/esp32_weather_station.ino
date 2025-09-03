@@ -1,3 +1,133 @@
+/**
+ * @file esp32_weather_station.ino
+ * @brief Estación meteorológica básica con ESP32 que expone datos vía servidor web local.
+ *
+ * Este sketch implementa:
+ *  - Lectura periódica de sensores ambientales:
+ *      * DHT11: Temperatura y Humedad Relativa.
+ *      * BMP180/BMP085: Presión atmosférica absoluta (I2C).
+ *  - Cálculo de métricas derivadas:
+ *      * Media Móvil Simple (SMA) para suavizado (temperatura, humedad y presión).
+ *      * Punto de rocío (fórmula de Magnus).
+ *      * Presión ajustada a nivel del mar (corrección barométrica).
+ *  - Servidor HTTP (modo Access Point autónomo) con:
+ *      * Página HTML (dashboard ligero con actualización cada 2 s).
+ *      * Endpoint JSON: /data
+ *  - Registro por puerto serie de las lecturas filtradas.
+ *
+ * ---------------------------------------------------------------------------
+ * HARDWARE
+ * ---------------------------------------------------------------------------
+ *  - MCU: ESP32 (cualquier módulo con soporte WiFi).
+ *  - Sensor DHT11:
+ *       * DATA -> GPIO4 (definido por DHTPIN)
+ *       * Alimentación 3V3 y resistencia pull-up típica (4.7K–10K) a DATA.
+ *  - Sensor BMP180 / BMP085 (I2C):
+ *       * SDA -> GPIO21
+ *       * SCL -> GPIO22
+ *       * Alimentación 3V3 (ver datasheet para VIN según módulo).
+ *
+ * ---------------------------------------------------------------------------
+ * CONFIGURACIÓN CLAVE
+ * ---------------------------------------------------------------------------
+ *  ALTITUDE_METERS: Altitud del sitio de instalación (m) para corregir presión a nivel del mar.
+ *  SAMPLE_INTERVAL: Periodo entre adquisiciones (ms).
+ *  SMA_SIZE: Tamaño de ventana de la media móvil (suavizado).
+ *  I2C_SDA / I2C_SCL: Pines usados para bus I2C.
+ *  AP_SSID: Nombre de la red WiFi creada en modo Access Point.
+ *
+ * ---------------------------------------------------------------------------
+ * FLUJO PRINCIPAL
+ * ---------------------------------------------------------------------------
+ *  setup():
+ *    - Inicializa Serial, I2C, sensores y buffers SMA.
+ *    - Inicia modo AP (sin contraseña por simplicidad).
+ *    - Construye y registra handlers HTTP para:
+ *        * "/"     -> Página HTML (dashboard).
+ *        * "/data" -> JSON con últimas métricas calculadas.
+ *
+ *  loop():
+ *    - Cada SAMPLE_INTERVAL ms:
+ *        * Lee sensores (con manejo de fallos del DHT).
+ *        * Convierte presión de Pa a hPa.
+ *        * Actualiza buffers circulares y recalcula medias (SMA).
+ *        * Calcula punto de rocío y presión a nivel del mar.
+ *        * Emite resumen por Serial (lecturas suavizadas).
+ *    - Atiende peticiones HTTP (server.handleClient()).
+ *
+ * ---------------------------------------------------------------------------
+ * ENDPOINT /data (JSON)
+ * ---------------------------------------------------------------------------
+ *  {
+ *    "temperature": <float °C SMA>,
+ *    "humidity":    <float % SMA>,
+ *    "pressure":    <float hPa SMA>,
+ *    "pressure_sea":<float hPa corregida a nivel del mar>,
+ *    "dew_point":   <float °C>,
+ *    "uptime":      <segundos desde arranque>
+ *  }
+ *
+ * ---------------------------------------------------------------------------
+ * CÁLCULOS
+ * ---------------------------------------------------------------------------
+ *  Media Móvil Simple (SMA):
+ *     sma = (Σ lectura_i) / N
+ *
+ *  Punto de rocío (Magnus-Tetens):
+ *     γ = (a*T)/(b+T) + ln(RH/100)
+ *     Td = (b*γ)/(a-γ)
+ *     (a=17.27, b=237.7)
+ *
+ *  Presión a nivel del mar (aprox barométrica estándar):
+ *     P0 = P / (1 - (altitud / 44330))^5.255
+ *
+ * ---------------------------------------------------------------------------
+ * MANEJO DE ERRORES / LIMITACIONES
+ * ---------------------------------------------------------------------------
+ *  - Si el DHT11 falla (NaN), se conserva el histórico previo (no se modifica el buffer).
+ *  - Se invoca bmp.begin() en setup; en cada ciclo se vuelve a intentar si no hay lectura,
+ *    aunque podría optimizarse evitando reinicializaciones repetidas.
+ *  - No hay control de saturación ni validación de rangos físicos extremos.
+ *  - AP sin password: para entorno real, agregar seguridad (WPA2).
+ *
+ * ---------------------------------------------------------------------------
+ * POSIBLES MEJORAS
+ * ---------------------------------------------------------------------------
+ *  - Sustituir DHT11 por DHT22/SHT31 (mayor precisión).
+ *  - Persistencia de configuraciones (SPIFFS/LittleFS/NVS).
+ *  - Agregar autenticación básica para endpoints.
+ *  - Soporte STA + AP concurrente (modo dual).
+ *  - Compresión o minimización de la página web.
+ *  - Migrar a AsyncWebServer para mayor eficiencia.
+ *  - Promedios exponenciales (EMA) o filtros Kalman para suavizado avanzado.
+ *  - Inclusión de timestamp NTP y envío a un broker MQTT.
+ *  - Captive portal para configurar altitud y SSID.
+ *
+ * ---------------------------------------------------------------------------
+ * USO RÁPIDO
+ * ---------------------------------------------------------------------------
+ *  1. Ajustar ALTITUDE_METERS según localización.
+ *  2. Cargar sketch en el ESP32.
+ *  3. Conectar a la red WiFi "ESP32_WeatherStation".
+ *  4. Abrir en navegador la IP mostrada en Serial (típicamente 192.168.4.1).
+ *
+ * ---------------------------------------------------------------------------
+ * NOTAS
+ * ---------------------------------------------------------------------------
+ *  - El dashboard se actualiza cada 2 s vía fetch().
+ *  - El uptime se muestra en formato d HH:MM:SS si aplica.
+ *  - Las primeras lecturas (antes de llenar la ventana SMA) usan menos muestras.
+ *
+ * ---------------------------------------------------------------------------
+ * LICENCIA / USO
+ * ---------------------------------------------------------------------------
+ *  - Ejemplo educativo. Adaptar según necesidad del proyecto.
+ *
+ * ---------------------------------------------------------------------------
+ * AUTORÍA / MANTENIMIENTO
+ * ---------------------------------------------------------------------------
+ *  - Crear un CHANGELOG y versión semántica si se amplía el proyecto.
+ */
 /*
   esp32_weather_station.ino
   Sketch para ESP32 que lee un sensor BMP180 (I2C) y sirve un dashboard web.
